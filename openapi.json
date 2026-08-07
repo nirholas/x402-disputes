@@ -1,0 +1,1295 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "x402-disputes",
+    "version": "0.1.0",
+    "description": "Arbitration for failed real-world tasks — signed case records with evidence hashes, status snapshots, and signed rulings\n\nPaid routes are settled with x402 (HTTP 402) in USDC on **Base or Solana** — the client picks the rail from the 402 `accepts` array.",
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    },
+    "contact": {
+      "name": "nirholas",
+      "email": "nichxbt@gmail.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4025",
+      "description": "Local development"
+    },
+    {
+      "url": "https://{host}",
+      "description": "Self-hosted",
+      "variables": {
+        "host": {
+          "default": "example.com"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "paid",
+      "description": "x402-paid routes — the artifact is returned in the 200 body"
+    },
+    {
+      "name": "free",
+      "description": "Free routes"
+    }
+  ],
+  "paths": {
+    "/cases": {
+      "post": {
+        "summary": "Open a dispute against a settled payment. Evidence is hashed on arrival and the content discarded; the signed case record carries every hash plus a combined root.",
+        "description": "Open a dispute against a settled payment. Evidence is hashed on arrival and the content discarded; the signed case record carries every hash plus a combined root. Paid: $0.01 in USDC on Base or Solana (x402).",
+        "operationId": "openCase",
+        "tags": [
+          "paid"
+        ],
+        "responses": {
+          "201": {
+            "description": "Signed case record + evidence hash",
+            "headers": {
+              "X-PAYMENT-RESPONSE": {
+                "description": "Base64 settlement receipt: { rail, network, transaction, payer }",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "caseId": {
+                      "type": "string"
+                    },
+                    "document": {
+                      "const": "x402-disputes/case"
+                    },
+                    "claimant": {
+                      "type": "object",
+                      "description": "Dual-rail wallet identity",
+                      "properties": {
+                        "rail": {
+                          "type": "string",
+                          "enum": [
+                            "evm",
+                            "solana"
+                          ]
+                        },
+                        "address": {
+                          "type": "string",
+                          "description": "Lowercased 0x address, or base58 Solana pubkey"
+                        }
+                      }
+                    },
+                    "respondent": {
+                      "type": "object",
+                      "properties": {
+                        "merchantId": {
+                          "type": "string"
+                        },
+                        "wallet": {
+                          "type": "object",
+                          "description": "Dual-rail wallet identity",
+                          "properties": {
+                            "rail": {
+                              "type": "string",
+                              "enum": [
+                                "evm",
+                                "solana"
+                              ]
+                            },
+                            "address": {
+                              "type": "string",
+                              "description": "Lowercased 0x address, or base58 Solana pubkey"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "disputedPayment": {
+                      "type": "object",
+                      "properties": {
+                        "rail": {
+                          "type": "string",
+                          "enum": [
+                            "evm",
+                            "solana",
+                            "unknown"
+                          ]
+                        },
+                        "network": {
+                          "type": "string"
+                        },
+                        "transaction": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "claimType": {
+                      "type": "string"
+                    },
+                    "statement": {
+                      "type": "string"
+                    },
+                    "requestedRemedy": {
+                      "type": "string"
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "sha256": {
+                            "type": "string"
+                          },
+                          "bytes": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "evidenceRoot": {
+                      "type": "string",
+                      "description": "SHA-256 over the sorted item hashes"
+                    },
+                    "filingFee": {
+                      "type": "string"
+                    },
+                    "openedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "respondBy": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "open",
+                        "awaiting_response",
+                        "ruled",
+                        "withdrawn"
+                      ]
+                    },
+                    "signature": {
+                      "type": "string"
+                    },
+                    "algorithm": {
+                      "const": "HMAC-SHA256"
+                    }
+                  }
+                },
+                "example": {
+                  "caseId": "case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12",
+                  "document": "x402-disputes/case",
+                  "claimant": {
+                    "rail": "solana",
+                    "address": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW"
+                  },
+                  "respondent": {
+                    "merchantId": "osteria-fiorentina.example",
+                    "wallet": {
+                      "rail": "evm",
+                      "address": "0x40252cfdf8b20ed757d61ff157719f33ec332402"
+                    }
+                  },
+                  "disputedPayment": {
+                    "rail": "solana",
+                    "network": "solana-devnet",
+                    "transaction": "5Kq7xJ2mNsignature",
+                    "amount": "$0.75"
+                  },
+                  "claimType": "not_delivered",
+                  "statement": "Paid for a held table at 19:30. Arrived on time, no reservation on file, turned away.",
+                  "requestedRemedy": "full_refund",
+                  "evidence": [
+                    {
+                      "label": "booking-confirmation",
+                      "sha256": "0de7e63593a343f336173a4f67e4a8b20f001df27056fcd7d9afbae3ceabaeee",
+                      "bytes": 27
+                    },
+                    {
+                      "label": "arrival-photo-hash",
+                      "sha256": "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809",
+                      "bytes": 64
+                    },
+                    {
+                      "label": "chat-log",
+                      "sha256": "d51e40a0508a237cd4cfa6f9787b26be91fb09bf99116b7cb96149181a91c1c5",
+                      "bytes": 43
+                    }
+                  ],
+                  "evidenceRoot": "56558a3e037fc835853ac0be7b03b8291b71a555ed85cdc9038da094dcf3de7a",
+                  "filingFee": "$0.01",
+                  "openedAt": "2026-01-12T20:15:00.000Z",
+                  "respondBy": "2026-01-15T20:15:00.000Z",
+                  "status": "awaiting_response",
+                  "signature": "b62d…hex hmac…",
+                  "algorithm": "HMAC-SHA256",
+                  "settlement": {
+                    "rail": "solana",
+                    "network": "solana-devnet",
+                    "transaction": "3Ha…signature…",
+                    "payer": "ClaimantPubkey…",
+                    "amount": "10000"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "disputedPayment.transaction is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required — dual-rail x402 challenge listing a Base (EVM) and a Solana entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentRequired"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "claimant",
+                  "respondent",
+                  "disputedPayment"
+                ],
+                "properties": {
+                  "claimant": {
+                    "type": "string"
+                  },
+                  "respondent": {
+                    "type": "object",
+                    "required": [
+                      "merchantId"
+                    ],
+                    "properties": {
+                      "merchantId": {
+                        "type": "string"
+                      },
+                      "wallet": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "disputedPayment": {
+                    "type": "object",
+                    "required": [
+                      "transaction"
+                    ],
+                    "properties": {
+                      "transaction": {
+                        "type": "string"
+                      },
+                      "network": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "claimType": {
+                    "type": "string",
+                    "enum": [
+                      "not_delivered",
+                      "partial",
+                      "wrong_item",
+                      "late",
+                      "overcharged"
+                    ]
+                  },
+                  "statement": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "requestedRemedy": {
+                    "type": "string",
+                    "enum": [
+                      "full_refund",
+                      "partial_refund",
+                      "redo",
+                      "none"
+                    ]
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "maxItems": 12,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        },
+                        "sha256": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}$"
+                        },
+                        "bytes": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "claimant": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW",
+                "respondent": {
+                  "merchantId": "osteria-fiorentina.example",
+                  "wallet": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402"
+                },
+                "disputedPayment": {
+                  "network": "solana-devnet",
+                  "transaction": "5Kq7xJ2mNsignature",
+                  "amount": "$0.75"
+                },
+                "claimType": "not_delivered",
+                "statement": "Arrived on time, no reservation on file, turned away.",
+                "requestedRemedy": "full_refund",
+                "evidence": [
+                  {
+                    "label": "booking-confirmation",
+                    "content": "REF-9A3C71 19:30 party of 2"
+                  },
+                  {
+                    "label": "receipt",
+                    "sha256": "9f2c4a1b8d3e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8",
+                    "bytes": 412
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Case index — ids, status, claim type and merchant only. No statements, no evidence hashes.",
+        "description": "Case index — ids, status, claim type and merchant only. No statements, no evidence hashes. Free.",
+        "operationId": "caseIndex",
+        "tags": [
+          "free"
+        ],
+        "responses": {
+          "200": {
+            "description": "Case index",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cases": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "cases": [
+                    {
+                      "caseId": "case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12",
+                      "status": "ruled",
+                      "claimType": "not_delivered",
+                      "merchantId": "osteria-fiorentina.example",
+                      "openedAt": "2026-01-12T20:15:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cases/{id}": {
+      "get": {
+        "summary": "Buy a fresh signed status snapshot: current status, response deadline, whether it is overdue, the timeline, and the ruling once one exists.",
+        "description": "Buy a fresh signed status snapshot: current status, response deadline, whether it is overdue, the timeline, and the ruling once one exists. Paid: $0.001 (per poll) in USDC on Base or Solana (x402).",
+        "operationId": "caseStatus",
+        "tags": [
+          "paid"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The caseId from `POST /cases`"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status snapshot",
+            "headers": {
+              "X-PAYMENT-RESPONSE": {
+                "description": "Base64 settlement receipt: { rail, network, transaction, payer }",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "caseId": {
+                      "type": "string"
+                    },
+                    "document": {
+                      "const": "x402-disputes/status"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "open",
+                        "awaiting_response",
+                        "ruled",
+                        "withdrawn"
+                      ]
+                    },
+                    "claimType": {
+                      "type": "string"
+                    },
+                    "claimant": {
+                      "type": "object",
+                      "description": "Dual-rail wallet identity",
+                      "properties": {
+                        "rail": {
+                          "type": "string",
+                          "enum": [
+                            "evm",
+                            "solana"
+                          ]
+                        },
+                        "address": {
+                          "type": "string",
+                          "description": "Lowercased 0x address, or base58 Solana pubkey"
+                        }
+                      }
+                    },
+                    "respondent": {
+                      "type": "object"
+                    },
+                    "disputedPayment": {
+                      "type": "object",
+                      "properties": {
+                        "rail": {
+                          "type": "string",
+                          "enum": [
+                            "evm",
+                            "solana",
+                            "unknown"
+                          ]
+                        },
+                        "network": {
+                          "type": "string"
+                        },
+                        "transaction": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "requestedRemedy": {
+                      "type": "string"
+                    },
+                    "evidenceRoot": {
+                      "type": "string"
+                    },
+                    "evidenceCount": {
+                      "type": "integer"
+                    },
+                    "openedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "respondBy": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "overdue": {
+                      "type": "boolean"
+                    },
+                    "timeline": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "ruling": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "description": "The signed ruling, once one exists"
+                    },
+                    "snapshotAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "signature": {
+                      "type": "string"
+                    },
+                    "algorithm": {
+                      "const": "HMAC-SHA256"
+                    }
+                  }
+                },
+                "example": {
+                  "caseId": "case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12",
+                  "document": "x402-disputes/status",
+                  "status": "ruled",
+                  "claimType": "not_delivered",
+                  "claimant": {
+                    "rail": "solana",
+                    "address": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW"
+                  },
+                  "respondent": {
+                    "merchantId": "osteria-fiorentina.example",
+                    "wallet": {
+                      "rail": "evm",
+                      "address": "0x40252cfdf8b20ed757d61ff157719f33ec332402"
+                    }
+                  },
+                  "disputedPayment": {
+                    "rail": "solana",
+                    "network": "solana-devnet",
+                    "transaction": "5Kq7xJ2mNsignature",
+                    "amount": "$0.75"
+                  },
+                  "requestedRemedy": "full_refund",
+                  "evidenceRoot": "56558a3e037fc835853ac0be7b03b8291b71a555ed85cdc9038da094dcf3de7a",
+                  "evidenceCount": 3,
+                  "openedAt": "2026-01-12T20:15:00.000Z",
+                  "respondBy": "2026-01-15T20:15:00.000Z",
+                  "overdue": false,
+                  "timeline": [
+                    {
+                      "at": "2026-01-12T20:15:00.000Z",
+                      "event": "case_opened",
+                      "detail": "not_delivered against osteria-fiorentina.example for payment 5Kq7xJ2mNsignature"
+                    },
+                    {
+                      "at": "2026-01-13T09:00:00.000Z",
+                      "event": "ruled",
+                      "detail": "upheld → full_refund"
+                    },
+                    {
+                      "at": "2026-01-15T20:15:00.000Z",
+                      "event": "response_due",
+                      "detail": "72h response window"
+                    }
+                  ],
+                  "ruling": {
+                    "rulingId": "rul_2c6e9b05-71a3-4d8f-b024-9e5c7a1f3b60",
+                    "document": "x402-disputes/ruling",
+                    "caseId": "case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12",
+                    "finding": "upheld",
+                    "remedy": "full_refund",
+                    "rationale": "Merchant did not respond within the 72h window and the booking reference does not appear in their confirmation feed. Evidence root matches the filed bundle.",
+                    "refundInstruction": {
+                      "payTo": {
+                        "rail": "solana",
+                        "address": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW"
+                      },
+                      "amount": "$0.75",
+                      "asset": "USDC",
+                      "network": "solana-devnet",
+                      "reference": "refund for case case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12 / payment 5Kq7xJ2mNsignature",
+                      "status": "instructed"
+                    },
+                    "arbiter": "arbiter-1",
+                    "ruledAt": "2026-01-13T09:00:00.000Z",
+                    "signature": "0e94…hex hmac…",
+                    "algorithm": "HMAC-SHA256"
+                  },
+                  "snapshotAt": "2026-01-13T09:30:00.000Z",
+                  "signature": "5ac7…hex hmac…",
+                  "algorithm": "HMAC-SHA256",
+                  "settlement": {
+                    "rail": "evm",
+                    "network": "base-sepolia",
+                    "transaction": "0xabc…",
+                    "payer": "0xPayer…",
+                    "amount": "1000"
+                  }
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required — dual-rail x402 challenge listing a Base (EVM) and a Solana entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentRequired"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown caseId — not charged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rule/{id}": {
+      "post": {
+        "summary": "Rule on a case. Free, but requires the arbiter key in the X-Arbiter-Key header. Returns the signed ruling and its refund instruction.",
+        "description": "Rule on a case. Free, but requires the arbiter key in the X-Arbiter-Key header. Returns the signed ruling and its refund instruction. Free.",
+        "operationId": "ruleOnCase",
+        "tags": [
+          "free"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The caseId"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Signed ruling + refund instruction",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rulingId": {
+                      "type": "string"
+                    },
+                    "document": {
+                      "const": "x402-disputes/ruling"
+                    },
+                    "caseId": {
+                      "type": "string"
+                    },
+                    "finding": {
+                      "type": "string",
+                      "enum": [
+                        "upheld",
+                        "partially_upheld",
+                        "dismissed"
+                      ]
+                    },
+                    "remedy": {
+                      "type": "string",
+                      "enum": [
+                        "full_refund",
+                        "partial_refund",
+                        "redo",
+                        "none"
+                      ]
+                    },
+                    "rationale": {
+                      "type": "string"
+                    },
+                    "refundInstruction": {
+                      "type": "object",
+                      "properties": {
+                        "payTo": {
+                          "type": "object",
+                          "description": "Dual-rail wallet identity",
+                          "properties": {
+                            "rail": {
+                              "type": "string",
+                              "enum": [
+                                "evm",
+                                "solana"
+                              ]
+                            },
+                            "address": {
+                              "type": "string",
+                              "description": "Lowercased 0x address, or base58 Solana pubkey"
+                            }
+                          }
+                        },
+                        "amount": {
+                          "type": "string"
+                        },
+                        "asset": {
+                          "const": "USDC"
+                        },
+                        "network": {
+                          "type": "string"
+                        },
+                        "reference": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "instructed",
+                            "not_applicable"
+                          ]
+                        }
+                      }
+                    },
+                    "arbiter": {
+                      "type": "string"
+                    },
+                    "ruledAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "signature": {
+                      "type": "string"
+                    },
+                    "algorithm": {
+                      "const": "HMAC-SHA256"
+                    }
+                  }
+                },
+                "example": {
+                  "rulingId": "rul_2c6e9b05-71a3-4d8f-b024-9e5c7a1f3b60",
+                  "document": "x402-disputes/ruling",
+                  "caseId": "case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12",
+                  "finding": "upheld",
+                  "remedy": "full_refund",
+                  "rationale": "Merchant did not respond within the 72h window and the booking reference does not appear in their confirmation feed. Evidence root matches the filed bundle.",
+                  "refundInstruction": {
+                    "payTo": {
+                      "rail": "solana",
+                      "address": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW"
+                    },
+                    "amount": "$0.75",
+                    "asset": "USDC",
+                    "network": "solana-devnet",
+                    "reference": "refund for case case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12 / payment 5Kq7xJ2mNsignature",
+                    "status": "instructed"
+                  },
+                  "arbiter": "arbiter-1",
+                  "ruledAt": "2026-01-13T09:00:00.000Z",
+                  "signature": "0e94…hex hmac…",
+                  "algorithm": "HMAC-SHA256"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "X-Arbiter-Key missing or wrong",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown caseId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Case has already been ruled on",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "finding": {
+                    "type": "string",
+                    "enum": [
+                      "upheld",
+                      "partially_upheld",
+                      "dismissed"
+                    ]
+                  },
+                  "remedy": {
+                    "type": "string",
+                    "enum": [
+                      "full_refund",
+                      "partial_refund",
+                      "redo",
+                      "none"
+                    ]
+                  },
+                  "refundAmount": {
+                    "type": "string"
+                  },
+                  "rationale": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "arbiter": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "finding": "upheld",
+                "remedy": "full_refund",
+                "refundAmount": "$0.75",
+                "arbiter": "arbiter-1",
+                "rationale": "No response within the window; booking reference absent from the merchant's feed."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/evidence/hash": {
+      "post": {
+        "summary": "Recompute evidence hashes locally and, with a caseId, compare against the root that was filed. Free — a pure function of its input.",
+        "description": "Recompute evidence hashes locally and, with a caseId, compare against the root that was filed. Free — a pure function of its input. Free.",
+        "operationId": "hashEvidence",
+        "tags": [
+          "free"
+        ],
+        "responses": {
+          "200": {
+            "description": "Item hashes, combined root, and a `matches` flag against a filed case",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "root": {
+                      "type": "string"
+                    },
+                    "caseId": {
+                      "type": "string"
+                    },
+                    "filedRoot": {
+                      "type": "string"
+                    },
+                    "matches": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "example": {
+                  "items": [
+                    {
+                      "label": "booking-confirmation",
+                      "sha256": "0de7e63593a343f336173a4f67e4a8b20f001df27056fcd7d9afbae3ceabaeee",
+                      "bytes": 27
+                    }
+                  ],
+                  "root": "d13f37d8e404be5036002754234f691a6e09dbb89855864eebcb68e0a39c1259",
+                  "caseId": "case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12",
+                  "filedRoot": "56558a3e037fc835853ac0be7b03b8291b71a555ed85cdc9038da094dcf3de7a",
+                  "matches": true
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "caseId": {
+                    "type": "string"
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "caseId": "case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12",
+                "evidence": [
+                  {
+                    "label": "booking-confirmation",
+                    "content": "REF-9A3C71 19:30 party of 2"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rulings/{caseId}": {
+      "get": {
+        "summary": "The signed ruling for a case, once one exists.",
+        "description": "The signed ruling for a case, once one exists. Free.",
+        "operationId": "getRuling",
+        "tags": [
+          "free"
+        ],
+        "parameters": [
+          {
+            "name": "caseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The caseId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed ruling",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "example": {
+                  "rulingId": "rul_2c6e9b05-71a3-4d8f-b024-9e5c7a1f3b60",
+                  "document": "x402-disputes/ruling",
+                  "caseId": "case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12",
+                  "finding": "upheld",
+                  "remedy": "full_refund",
+                  "rationale": "Merchant did not respond within the 72h window and the booking reference does not appear in their confirmation feed. Evidence root matches the filed bundle.",
+                  "refundInstruction": {
+                    "payTo": {
+                      "rail": "solana",
+                      "address": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW"
+                    },
+                    "amount": "$0.75",
+                    "asset": "USDC",
+                    "network": "solana-devnet",
+                    "reference": "refund for case case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12 / payment 5Kq7xJ2mNsignature",
+                    "status": "instructed"
+                  },
+                  "arbiter": "arbiter-1",
+                  "ruledAt": "2026-01-13T09:00:00.000Z",
+                  "signature": "0e94…hex hmac…",
+                  "algorithm": "HMAC-SHA256"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No ruling for that case yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verify": {
+      "post": {
+        "summary": "Verify the HMAC-SHA256 signature of any case record, status snapshot or ruling.",
+        "description": "Verify the HMAC-SHA256 signature of any case record, status snapshot or ruling. Free.",
+        "operationId": "verifyArtifact",
+        "tags": [
+          "free"
+        ],
+        "responses": {
+          "200": {
+            "description": "`{ valid: true | false }`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "example": {
+                  "valid": true
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "rulingId": "rul_2c6e9b05-71a3-4d8f-b024-9e5c7a1f3b60",
+                "document": "x402-disputes/ruling",
+                "caseId": "case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12",
+                "finding": "upheld",
+                "remedy": "full_refund",
+                "rationale": "Merchant did not respond within the 72h window and the booking reference does not appear in their confirmation feed. Evidence root matches the filed bundle.",
+                "refundInstruction": {
+                  "payTo": {
+                    "rail": "solana",
+                    "address": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW"
+                  },
+                  "amount": "$0.75",
+                  "asset": "USDC",
+                  "network": "solana-devnet",
+                  "reference": "refund for case case_8d1f47a2-6b30-4c95-9e21-3f0a5c7b8d12 / payment 5Kq7xJ2mNsignature",
+                  "status": "instructed"
+                },
+                "arbiter": "arbiter-1",
+                "ruledAt": "2026-01-13T09:00:00.000Z",
+                "signature": "0e94…hex hmac…",
+                "algorithm": "HMAC-SHA256"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Liveness probe.",
+        "description": "Liveness probe. Free.",
+        "operationId": "health",
+        "tags": [
+          "free"
+        ],
+        "responses": {
+          "200": {
+            "description": "`{ ok: true }`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "service": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "service": "x402-disputes"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PaymentRequired": {
+        "type": "object",
+        "description": "x402 challenge. `accepts` always contains both an EVM and a Solana entry.",
+        "required": [
+          "x402Version",
+          "accepts"
+        ],
+        "properties": {
+          "x402Version": {
+            "type": "integer",
+            "const": 1
+          },
+          "error": {
+            "type": "string"
+          },
+          "accepts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentRequirements"
+            }
+          }
+        },
+        "example": {
+          "x402Version": 1,
+          "error": "X-PAYMENT header is required",
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "base-sepolia",
+              "maxAmountRequired": "10000",
+              "resource": "http://localhost:4025/cases",
+              "description": "Open a dispute against a settled payment. Evidence is hashed on arrival and the content discarded; the signed case record carries every hash plus a combined root.",
+              "mimeType": "application/json",
+              "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402",
+              "maxTimeoutSeconds": 120,
+              "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "extra": {
+                "name": "USDC",
+                "version": "2"
+              }
+            },
+            {
+              "scheme": "exact",
+              "network": "solana-devnet",
+              "maxAmountRequired": "10000",
+              "resource": "http://localhost:4025/cases",
+              "description": "Open a dispute against a settled payment. Evidence is hashed on arrival and the content discarded; the signed case record carries every hash plus a combined root.",
+              "mimeType": "application/json",
+              "payTo": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW",
+              "maxTimeoutSeconds": 120,
+              "asset": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+              "extra": {
+                "feePayer": "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4"
+              }
+            }
+          ]
+        }
+      },
+      "PaymentRequirements": {
+        "type": "object",
+        "required": [
+          "scheme",
+          "network",
+          "maxAmountRequired",
+          "resource",
+          "description",
+          "mimeType",
+          "payTo",
+          "maxTimeoutSeconds",
+          "asset"
+        ],
+        "properties": {
+          "scheme": {
+            "type": "string",
+            "const": "exact"
+          },
+          "network": {
+            "type": "string",
+            "enum": [
+              "base-sepolia",
+              "base",
+              "solana-devnet",
+              "solana"
+            ]
+          },
+          "maxAmountRequired": {
+            "type": "string",
+            "description": "Amount in USDC base units (6 decimals)"
+          },
+          "resource": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "payTo": {
+            "type": "string",
+            "description": "EVM 0x address or Solana base58 pubkey depending on the rail"
+          },
+          "maxTimeoutSeconds": {
+            "type": "integer"
+          },
+          "asset": {
+            "type": "string",
+            "description": "USDC contract address or SPL mint"
+          },
+          "outputSchema": {
+            "type": "object"
+          },
+          "extra": {
+            "type": "object",
+            "description": "EIP-712 domain on the EVM rail; `{ feePayer }` sponsor account on the Solana rail"
+          }
+        }
+      },
+      "Signature": {
+        "type": "object",
+        "description": "Every artifact carries an HMAC-SHA256 signature over its canonical JSON.",
+        "properties": {
+          "signature": {
+            "type": "string",
+            "description": "hex HMAC-SHA256"
+          },
+          "algorithm": {
+            "type": "string",
+            "const": "HMAC-SHA256"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,500 @@
+{
+  "x402Version": 1,
+  "name": "x402-disputes",
+  "description": "Arbitration for failed real-world tasks — signed case records with evidence hashes, status snapshots, and signed rulings",
+  "homepage": "https://nirholas.github.io/x402-disputes/",
+  "skill": "skill.md",
+  "networks": [
+    "base-sepolia",
+    "base",
+    "solana-devnet",
+    "solana"
+  ],
+  "payTo": {
+    "evm": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402",
+    "solana": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW"
+  },
+  "facilitators": {
+    "evm": "https://x402.org/facilitator",
+    "solana": "https://facilitator.payai.network"
+  },
+  "resources": [
+    {
+      "resource": "POST /cases",
+      "description": "Open a dispute case against a settled payment. Evidence content is hashed (SHA-256) and never stored. Returns the signed case record with per-item hashes and a combined evidence root.",
+      "price": "$0.01",
+      "network": "base-sepolia",
+      "asset": "USDC",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "base-sepolia",
+          "asset": "USDC",
+          "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402",
+          "price": "$0.01"
+        },
+        {
+          "scheme": "exact",
+          "network": "solana-devnet",
+          "asset": "USDC",
+          "payTo": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW",
+          "price": "$0.01"
+        }
+      ],
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "caseId": {
+            "type": "string"
+          },
+          "document": {
+            "const": "x402-disputes/case"
+          },
+          "claimant": {
+            "type": "object",
+            "description": "Dual-rail wallet identity",
+            "properties": {
+              "rail": {
+                "type": "string",
+                "enum": [
+                  "evm",
+                  "solana"
+                ]
+              },
+              "address": {
+                "type": "string",
+                "description": "Lowercased 0x address, or base58 Solana pubkey"
+              }
+            }
+          },
+          "respondent": {
+            "type": "object",
+            "properties": {
+              "merchantId": {
+                "type": "string"
+              },
+              "wallet": {
+                "type": "object",
+                "description": "Dual-rail wallet identity",
+                "properties": {
+                  "rail": {
+                    "type": "string",
+                    "enum": [
+                      "evm",
+                      "solana"
+                    ]
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Lowercased 0x address, or base58 Solana pubkey"
+                  }
+                }
+              }
+            }
+          },
+          "disputedPayment": {
+            "type": "object",
+            "properties": {
+              "rail": {
+                "type": "string",
+                "enum": [
+                  "evm",
+                  "solana",
+                  "unknown"
+                ]
+              },
+              "network": {
+                "type": "string"
+              },
+              "transaction": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "string"
+              }
+            }
+          },
+          "claimType": {
+            "type": "string"
+          },
+          "statement": {
+            "type": "string"
+          },
+          "requestedRemedy": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "bytes": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "evidenceRoot": {
+            "type": "string",
+            "description": "SHA-256 over the sorted item hashes"
+          },
+          "filingFee": {
+            "type": "string"
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "respondBy": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "awaiting_response",
+              "ruled",
+              "withdrawn"
+            ]
+          },
+          "signature": {
+            "type": "string"
+          },
+          "algorithm": {
+            "const": "HMAC-SHA256"
+          }
+        }
+      }
+    },
+    {
+      "resource": "GET /cases/:id",
+      "description": "Signed status snapshot for a dispute case: status, response deadline, overdue flag, timeline, evidence root, and the embedded signed ruling once one exists. Pay per poll.",
+      "price": "$0.001",
+      "network": "base-sepolia",
+      "asset": "USDC",
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "base-sepolia",
+          "asset": "USDC",
+          "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402",
+          "price": "$0.001"
+        },
+        {
+          "scheme": "exact",
+          "network": "solana-devnet",
+          "asset": "USDC",
+          "payTo": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW",
+          "price": "$0.001"
+        }
+      ],
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "caseId": {
+            "type": "string"
+          },
+          "document": {
+            "const": "x402-disputes/status"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "awaiting_response",
+              "ruled",
+              "withdrawn"
+            ]
+          },
+          "claimType": {
+            "type": "string"
+          },
+          "claimant": {
+            "type": "object",
+            "description": "Dual-rail wallet identity",
+            "properties": {
+              "rail": {
+                "type": "string",
+                "enum": [
+                  "evm",
+                  "solana"
+                ]
+              },
+              "address": {
+                "type": "string",
+                "description": "Lowercased 0x address, or base58 Solana pubkey"
+              }
+            }
+          },
+          "respondent": {
+            "type": "object"
+          },
+          "disputedPayment": {
+            "type": "object",
+            "properties": {
+              "rail": {
+                "type": "string",
+                "enum": [
+                  "evm",
+                  "solana",
+                  "unknown"
+                ]
+              },
+              "network": {
+                "type": "string"
+              },
+              "transaction": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "string"
+              }
+            }
+          },
+          "requestedRemedy": {
+            "type": "string"
+          },
+          "evidenceRoot": {
+            "type": "string"
+          },
+          "evidenceCount": {
+            "type": "integer"
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "respondBy": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "overdue": {
+            "type": "boolean"
+          },
+          "timeline": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "ruling": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "The signed ruling, once one exists"
+          },
+          "snapshotAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "algorithm": {
+            "const": "HMAC-SHA256"
+          }
+        }
+      }
+    },
+    {
+      "resource": "POST /rule/:id",
+      "description": "Rule on a case. Free, but requires the arbiter key in the X-Arbiter-Key header. Returns the signed ruling and its refund instruction.",
+      "price": "$0",
+      "network": "base-sepolia",
+      "asset": "USDC",
+      "accepts": [],
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "rulingId": {
+            "type": "string"
+          },
+          "document": {
+            "const": "x402-disputes/ruling"
+          },
+          "caseId": {
+            "type": "string"
+          },
+          "finding": {
+            "type": "string",
+            "enum": [
+              "upheld",
+              "partially_upheld",
+              "dismissed"
+            ]
+          },
+          "remedy": {
+            "type": "string",
+            "enum": [
+              "full_refund",
+              "partial_refund",
+              "redo",
+              "none"
+            ]
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "refundInstruction": {
+            "type": "object",
+            "properties": {
+              "payTo": {
+                "type": "object",
+                "description": "Dual-rail wallet identity",
+                "properties": {
+                  "rail": {
+                    "type": "string",
+                    "enum": [
+                      "evm",
+                      "solana"
+                    ]
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Lowercased 0x address, or base58 Solana pubkey"
+                  }
+                }
+              },
+              "amount": {
+                "type": "string"
+              },
+              "asset": {
+                "const": "USDC"
+              },
+              "network": {
+                "type": "string"
+              },
+              "reference": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "instructed",
+                  "not_applicable"
+                ]
+              }
+            }
+          },
+          "arbiter": {
+            "type": "string"
+          },
+          "ruledAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "algorithm": {
+            "const": "HMAC-SHA256"
+          }
+        }
+      }
+    },
+    {
+      "resource": "POST /evidence/hash",
+      "description": "Recompute evidence hashes locally and, with a caseId, compare against the root that was filed. Free — a pure function of its input.",
+      "price": "$0",
+      "network": "base-sepolia",
+      "asset": "USDC",
+      "accepts": [],
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "root": {
+            "type": "string"
+          },
+          "caseId": {
+            "type": "string"
+          },
+          "filedRoot": {
+            "type": "string"
+          },
+          "matches": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "resource": "GET /cases",
+      "description": "Case index — ids, status, claim type and merchant only. No statements, no evidence hashes.",
+      "price": "$0",
+      "network": "base-sepolia",
+      "asset": "USDC",
+      "accepts": [],
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "cases": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    {
+      "resource": "GET /rulings/:caseId",
+      "description": "The signed ruling for a case, once one exists.",
+      "price": "$0",
+      "network": "base-sepolia",
+      "asset": "USDC",
+      "accepts": [],
+      "outputSchema": {
+        "type": "object"
+      }
+    },
+    {
+      "resource": "POST /verify",
+      "description": "Verify the HMAC-SHA256 signature of any case record, status snapshot or ruling.",
+      "price": "$0",
+      "network": "base-sepolia",
+      "asset": "USDC",
+      "accepts": [],
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "resource": "GET /health",
+      "description": "Liveness probe.",
+      "price": "$0",
+      "network": "base-sepolia",
+      "asset": "USDC",
+      "accepts": [],
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "service": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}
