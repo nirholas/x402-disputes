@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { paywall, payToBanner, withSettlement } from "./payments.js";
+import { ROUTE_SCHEMAS } from "./schemas.js";
 import {
   ARBITER_KEY,
   caseExists,
@@ -37,7 +38,7 @@ app.use(
     "POST /cases": {
       price: FILING_FEE,
       description: "Open a dispute case with hashed evidence",
-      outputSchema: { type: "object", description: "Signed case record + evidence hashes" },
+      outputSchema: ROUTE_SCHEMAS["POST /cases"],
     },
     "GET /cases/:id": (req) => {
       const id = req.path.split("/")[2] || "";
@@ -45,7 +46,7 @@ app.use(
       return {
         price: SNAPSHOT_PRICE,
         description: `Status snapshot for dispute case ${id}`,
-        outputSchema: { type: "object", description: "Signed status snapshot" },
+        outputSchema: ROUTE_SCHEMAS["GET /cases/:id"],
       };
     },
   }),
