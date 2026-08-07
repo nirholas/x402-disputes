@@ -397,7 +397,7 @@ holding both rails:
 | 400 | `INVALID_MERCHANT_ID` | `respondent.merchantId` is not 2-64 chars of `[a-z0-9._:-]` |
 | 400 | `MISSING_PAYMENT_TX` | `disputedPayment.transaction` is required |
 | 401 | `ARBITER_AUTH_REQUIRED` | `X-Arbiter-Key` missing or wrong on `POST /rule/:id` |
-| 404 | `CASE_NOT_FOUND` | Unknown caseId (**not charged**) |
+| 404 | `CASE_NOT_FOUND` | Unknown caseId — the 402 challenge is returned before the case is resolved, so payment has settled; poll ids from the free `GET /cases` |
 | 404 | `RULING_NOT_FOUND` | No ruling for that case yet |
 | 409 | `ALREADY_RULED` | Case has already been ruled on |
 | 400 | `BAD_REQUEST` | Malformed body |

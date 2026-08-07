@@ -7,7 +7,6 @@ import { paywall, payToBanner, withSettlement } from "./payments.js";
 import { ROUTE_SCHEMAS } from "./schemas.js";
 import {
   ARBITER_KEY,
-  caseExists,
   caseIndex,
   DisputeError,
   FILING_FEE,
@@ -32,7 +31,12 @@ app.use(express.json({ limit: "512kb" })); // evidence bodies can be chunky
 // POST /cases      → $0.01 filing fee
 // GET  /cases/:id  → $0.001 per status snapshot (pay-per-poll: each read
 //                    returns a fresh signed snapshot, not a promise of a push)
-// Unknown case ids resolve to null so a caller gets a free 404.
+//
+// The challenge comes first, always. An unpaid request is answered with 402 and
+// the full `accepts` array before the case id is resolved, so a discovery probe
+// (or any agent) can read this route's payment terms without holding a live
+// case id. An unknown case is the handler's business, after payment — the free
+// `GET /cases` index lists every id worth polling.
 app.use(
   paywall({
     "POST /cases": {
@@ -42,7 +46,6 @@ app.use(
     },
     "GET /cases/:id": (req) => {
       const id = req.path.split("/")[2] || "";
-      if (!caseExists(id)) return null; // free 404
       return {
         price: SNAPSHOT_PRICE,
         description: `Status snapshot for dispute case ${id}`,

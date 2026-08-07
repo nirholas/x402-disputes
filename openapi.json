@@ -670,7 +670,7 @@
             }
           },
           "402": {
-            "description": "Payment required — dual-rail x402 challenge listing a Base (EVM) and a Solana entry.",
+            "description": "Payment required — dual-rail x402 challenge listing a Base (EVM) and a Solana entry. Returned before the case id is resolved, so the route's terms are always discoverable.",
             "content": {
               "application/json": {
                 "schema": {
@@ -680,7 +680,7 @@
             }
           },
           "404": {
-            "description": "Unknown caseId — not charged",
+            "description": "Unknown caseId. Payment has already settled — take ids from the free GET /cases index before polling.",
             "content": {
               "application/json": {
                 "schema": {

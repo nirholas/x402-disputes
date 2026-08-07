@@ -320,7 +320,7 @@ PRIVATE_KEY=0x... npm run client
 
 | Status | Code | Meaning |
 |---|---|---|
-| 404 | `CASE_NOT_FOUND` | Unknown caseId — not charged |
+| 404 | `CASE_NOT_FOUND` | Unknown caseId. The 402 challenge is returned before the case is resolved — so the route is always quotable, and payment settles first. Take ids from the free `GET /cases` index |
 
 ---
 
