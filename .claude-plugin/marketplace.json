@@ -1,0 +1,25 @@
+{
+  "name": "x402-disputes",
+  "owner": {
+    "name": "nirholas"
+  },
+  "description": "Open x402 payment disputes with hashed evidence and fetch signed case records and arbiter rulings.",
+  "plugins": [
+    {
+      "name": "x402-disputes",
+      "source": "./plugins/x402-disputes",
+      "description": "Open x402 payment disputes with hashed evidence and fetch signed case records and arbiter rulings.",
+      "category": "automation",
+      "tags": [
+        "x402",
+        "usdc",
+        "solana",
+        "base",
+        "agentic-commerce",
+        "http-402",
+        "arbitration",
+        "disputes"
+      ]
+    }
+  ]
+}
